@@ -34,7 +34,7 @@ def credito():
                     lambda: print("Close transaction")
                 )
             ]
-        )(int(input("Digite o valor do pagamento: ")))
+        )(amount = int(input("Digite o valor do pagamento: ")))
     ]
 
 # Função principal para criar a transação com base no tipo
