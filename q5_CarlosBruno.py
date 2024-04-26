@@ -1,11 +1,10 @@
 from flask import Flask, request, jsonify
 from functools import partial
-import bcrypt  # Biblioteca para criptografia de senha
+import bcrypt
 import mysql.connector
 
 app = Flask(__name__)
 
-# Configuração da conexão com o banco de dados
 connect_to_database = lambda: (
     (lambda connection: (
         print("Conexão ao banco de dados bem-sucedida.") or connection
@@ -17,14 +16,12 @@ connect_to_database = lambda: (
     )) or None
 )
 
-# Função para criar uma transação em dinheiro
 dinheiro = lambda amount: [
     partial(print, "Valor recebido:", amount),
     partial(print, f"Receita do pagamento: ${amount}."),
     partial(print, "Transação completa")
 ]
 
-# Função para criar uma transferência bancária
 transferenciaBancaria = lambda: [
     partial(print, "Forneça detalhes de depósito bancário"),
     [
@@ -33,7 +30,6 @@ transferenciaBancaria = lambda: [
     ]
 ]
 
-# Função para criar uma transação de crédito
 credito = lambda account_name, account_number, payment_value: [
     partial(print, "Solicitar dados da conta de crédito - Nome:", account_name, "Número de conta:", account_number),
     [
@@ -43,7 +39,6 @@ credito = lambda account_name, account_number, payment_value: [
     ]
 ]
 
-# Função principal para criar a transação com base no tipo
 create_transaction = lambda transaction_type, amount=None, account_name=None, account_number=None, payment_value=None: (
     dinheiro(amount) if transaction_type == 'dinheiro' else
     transferenciaBancaria() if transaction_type == 'transferenciaBancaria' else
@@ -51,7 +46,6 @@ create_transaction = lambda transaction_type, amount=None, account_name=None, ac
     None
 )
 
-# Rota para criar uma transação
 @app.route('/create_transaction', methods=['POST'])
 def handle_create_transaction():
     transaction_type = request.form['transaction_type']

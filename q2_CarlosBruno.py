@@ -5,13 +5,11 @@ from q1_CarlosBruno import dinheiro, transferenciaBancaria, credito, create_tran
 
 class TestTransaction(unittest.TestCase):
     def setUp(self):
-        # Redefine sys.stdout para capturar a saída de impressão
         self.stdout = StringIO()
         self.patcher = patch('sys.stdout', new=self.stdout)
         self.patcher.start()
 
     def tearDown(self):
-        # Restaura sys.stdout
         self.patcher.stop()
 
     def assertFunctionListEqual(self, a, e):
@@ -21,7 +19,7 @@ class TestTransaction(unittest.TestCase):
             if isinstance(step, list) and isinstance(expected, list):
                 self.assertFunctionListEqual(step, expected)
             else:
-                self.assertEqual(step(), expected())  # Chama as funções e compara os resultados
+                self.assertEqual(step(), expected())
 
     def test_dinheiro_transaction(self):
         amount = 20
@@ -67,10 +65,9 @@ class TestTransaction(unittest.TestCase):
         self.assertFunctionListEqual(transaction_steps, expected_steps)
 
     def test_stress(self):
-        # Executa um grande número de transações para teste de estresse
         num_transactions = 1
         for _ in range(num_transactions):
-            transaction_type = "dinheiro"  # Pode ser qualquer tipo de transação aqui
+            transaction_type = "dinheiro"
             transaction_steps = create_transaction(transaction_type)
             for step in transaction_steps:
                 if isinstance(step, list):

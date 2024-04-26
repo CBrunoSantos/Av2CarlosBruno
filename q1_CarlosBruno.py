@@ -1,13 +1,11 @@
 from functools import partial
 
-# Função para transação em dinheiro
 dinheiro = lambda amount: [
     partial(print, "Valor recebido:", amount),
     partial(print, f"Receita do pagamento: ${amount}."),
     partial(print, "Transação completa")
 ]
 
-# Função para transferência bancária
 transferenciaBancaria = lambda: [
     partial(print, "Forneça detalhes de depósito bancário"),
     [
@@ -16,7 +14,6 @@ transferenciaBancaria = lambda: [
     ]
 ]
 
-# Função para transação de crédito
 credito = lambda account_name, account_number, payment_value: [
     partial(print, "Solicitar dados da conta de crédito - Nome:", account_name, "Número de conta:", account_number),
     [
@@ -26,7 +23,6 @@ credito = lambda account_name, account_number, payment_value: [
     ]
 ]
 
-# Função principal para criar a transação com base no tipo
 create_transaction = lambda transaction_type: (
     dinheiro(int(input("Digite o valor do pagamento: "))) if transaction_type == 'dinheiro' else
     transferenciaBancaria() if transaction_type == 'transferenciaBancaria' else
@@ -34,7 +30,6 @@ create_transaction = lambda transaction_type: (
     None
 )
 
-# Exemplo de uso:
 transaction_type = input("Digite o tipo de transação (dinheiro, transferenciaBancaria, credito): ")
 transaction_steps = create_transaction(transaction_type)
 for step in transaction_steps:
