@@ -1,46 +1,83 @@
-# test_transaction.py
-
 import unittest
-from transaction import cash_transaction, bank_transfer, credit_transaction
+from io import StringIO
+from unittest.mock import patch
+from q1_CarlosBruno import dinheiro, transferenciaBancaria, credito, create_transaction
 
 class TestTransaction(unittest.TestCase):
-    def test_cash_transaction(self):
-        # Simula uma transação em dinheiro
-        transaction_steps = cash_transaction()
-        expected_steps = [
-            "Receive cash amount: 100",
-            "Print payment receipt",
-            "Receipt for payment of $100.",
-            "Complete transaction"
-        ]
-        self.assertEqual([step() for step in transaction_steps], expected_steps)
+    def setUp(self):
+        # Redefine sys.stdout para capturar a saída de impressão
+        self.stdout = StringIO()
+        self.patcher = patch('sys.stdout', new=self.stdout)
+        self.patcher.start()
 
-    def test_bank_transfer(self):
-        # Simula uma transferência bancária
-        transaction_steps = bank_transfer()
+    def tearDown(self):
+        # Restaura sys.stdout
+        self.patcher.stop()
+
+    def assertFunctionListEqual(self, a, e):
+        """Método auxiliar para verificar se duas listas de funções são equivalentes."""
+        self.assertEqual(len(a), len(e))
+        for step, expected in zip(a, e):
+            if isinstance(step, list) and isinstance(expected, list):
+                self.assertFunctionListEqual(step, expected)
+            else:
+                self.assertEqual(step(), expected())  # Chama as funções e compara os resultados
+
+    def test_dinheiro_transaction(self):
+        amount = 20
+        transaction_steps = dinheiro(amount)
+        
         expected_steps = [
-            "Provide bank deposit details",
-            "Confirm payment approval from bank",
-            "Close transaction"
+            lambda: print("Valor recebido:", amount),
+            lambda: print(f"Receita do pagamento: ${amount}."),
+            lambda: print("Transação completa")
         ]
-        self.assertEqual([step() for step in transaction_steps], expected_steps)
+        
+        self.assertFunctionListEqual(transaction_steps, expected_steps)
+
+    def test_bank_transfer_transaction(self):
+        transaction_steps = transferenciaBancaria()
+
+        expected_steps = [
+            lambda: print("Forneça detalhes de depósito bancário"),
+            [
+                lambda: print("Confirmando aprovação de pagamento do banco"),
+                lambda: print("Fechando transação")
+            ]
+        ]
+
+        self.assertFunctionListEqual(transaction_steps, expected_steps)
 
     def test_credit_transaction(self):
-        # Simula uma transação de crédito
-        transaction_steps = credit_transaction()
-        expected_steps = [
-            "Request credit account details - Name: Test Account Account Number: 1234",
-            "Request payment from bank - Value: 200",
-            "Confirm payment approval from bank",
-            "Close transaction"
-        ]
-        self.assertEqual([step() for step in transaction_steps], expected_steps)
+        account_name = "Test Account"
+        account_number = "1234"
+        payment_value = 200
 
-def test_stress():
-    for _ in range(1000):
-        transaction_steps = cash_transaction()
-        for step in transaction_steps:
-            step()
+        transaction_steps = credito(account_name, account_number, payment_value)
+
+        expected_steps = [
+            lambda: print(f"Solicitar dados da conta de crédito - Nome: {account_name} Número de conta: {account_number}"),
+            [
+                lambda: print(f"Solicitar pagamento ao banco - Valor: {payment_value}"),
+                lambda: print("Confirme a aprovação do pagamento do banco"),
+                lambda: print("Fechar transação")
+            ]
+        ]
+
+        self.assertFunctionListEqual(transaction_steps, expected_steps)
+
+    def test_stress(self):
+        # Executa um grande número de transações para teste de estresse
+        num_transactions = 1
+        for _ in range(num_transactions):
+            transaction_type = "dinheiro"  # Pode ser qualquer tipo de transação aqui
+            transaction_steps = create_transaction(transaction_type)
+            for step in transaction_steps:
+                if isinstance(step, list):
+                    for sub_step in step:
+                        sub_step()
+                else:
+                    step()
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,58 +1,129 @@
-from sqlalchemy import create_engine, Column, Integer, String, Date, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+import mysql.connector
 
-# Criando a conexão com o banco de dados (substitua 'sqlite:///database.db' com o seu tipo e local do banco de dados)
-engine = create_engine('sqlite:///database.db', echo=True)
+# Conexão ao Banco de Dados
+def connect_to_database():
+    try:
+        connection = mysql.connector.connect(
+            host='localhost',
+            user='root',
+            password='Br041100!',
+            database="bancopython"
+        )
+        print("Conexão ao banco de dados bem-sucedida.")
+        return connection
+    except mysql.connector.Error as error:
+        print(f"Erro ao conectar ao banco de dados: {error}")
+        return None
 
-# Declarando a base do modelo
-Base = declarative_base()
+# Função para criar as tabelas no banco de dados, se ainda não existirem
+def create_tables(connection):
+    try:
+        cursor = connection.cursor()
 
-# Definindo a classe da tabela USERS
-class User(Base):
-    __tablename__ = 'USERS'
+        # Criação da tabela USERS
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS USERS (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                country VARCHAR(255),
+                id_console INT
+            )
+        """)
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    country = Column(String)
-    id_console = Column(Integer, ForeignKey('VIDEOGAMES.id_console'))
+        # Criação da tabela VIDEOGAMES
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS VIDEOGAMES (
+                id_console INT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                id_company INT,
+                release_date DATE
+            )
+        """)
 
-    videogames = relationship('Videogame', back_populates='users')
+        # Criação da tabela GAMES
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS GAMES (
+                id_game INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                genre VARCHAR(255),
+                release_date DATE,
+                id_console INT
+            )
+        """)
 
-# Definindo a classe da tabela VIDEOGAMES
-class Videogame(Base):
-    __tablename__ = 'VIDEOGAMES'
+        # Criação da tabela COMPANY
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS COMPANY (
+                id_company INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                country VARCHAR(255)
+            )
+        """)
 
-    id_console = Column(Integer, primary_key=True)
-    name = Column(String)
-    id_company = Column(Integer, ForeignKey('COMPANY.id_company'))
-    release_date = Column(Date)
+        connection.commit()
+        print("Tabelas criadas com sucesso.")
+    except mysql.connector.Error as error:
+        print(f"Erro ao criar tabelas: {error}")
 
-    company = relationship('Company', back_populates='videogames')
-    games = relationship('Game', back_populates='videogame')
-    users = relationship('User', back_populates='videogames')
+# Função para inserir um novo usuário na tabela USERS
+def insert_user(connection, name, country, id_console):
+    try:
+        cursor = connection.cursor()
+        sql = "INSERT INTO USERS (name, country, id_console) VALUES (%s, %s, %s)"
+        cursor.execute(sql, (name, country, id_console))
+        connection.commit()
+        print("Usuário inserido com sucesso.")
+    except mysql.connector.Error as error:
+        print(f"Erro ao inserir usuário: {error}")
 
-# Definindo a classe da tabela GAMES
-class Game(Base):
-    __tablename__ = 'GAMES'
+# Função para remover um usuário da tabela USERS
+def remove_user(connection, user_id):
+    try:
+        cursor = connection.cursor()
+        sql = "DELETE FROM USERS WHERE id = %s"
+        cursor.execute(sql, (user_id,))
+        connection.commit()
+        print("Usuário removido com sucesso.")
+    except mysql.connector.Error as error:
+        print(f"Erro ao remover usuário: {error}")
 
-    id_game = Column(Integer, primary_key=True)
-    title = Column(String)
-    genre = Column(String)
-    release_date = Column(Date)
-    id_console = Column(Integer, ForeignKey('VIDEOGAMES.id_console'))
+# Função para consultar todos os registros de uma tabela
+def query_table(connection, table_name):
+    try:
+        cursor = connection.cursor()
+        sql = f"SELECT * FROM {table_name}"
+        cursor.execute(sql)
+        records = cursor.fetchall()
+        if records:
+            for record in records:
+                print(record)
+        else:
+            print("Nenhum registro encontrado.")
+    except mysql.connector.Error as error:
+        print(f"Erro ao consultar registros: {error}")
 
-    videogame = relationship('Videogame', back_populates='games')
+# Exemplo de uso
+if __name__ == "__main__":
+    # Conectando ao banco de dados
+    connection = connect_to_database()
 
-# Definindo a classe da tabela COMPANY
-class Company(Base):
-    __tablename__ = 'COMPANY'
+    if connection:
+        # Criando as tabelas, se ainda não existirem
+        create_tables(connection)
 
-    id_company = Column(Integer, primary_key=True)
-    name = Column(String)
-    country = Column(String)
+        # Inserindo um novo usuário
+        insert_user(connection, "Alice", "USA", 1)
 
-    videogames = relationship('Videogame', back_populates='company')
+        # Consultando a tabela USERS
+        print("Registros na tabela USERS:")
+        query_table(connection, "USERS")
 
-# Cria as tabelas no banco de dados
-Base.metadata.create_all(engine)
+        # Removendo o usuário com id = 1
+        remove_user(connection, 1)
+
+        # Consultando novamente a tabela USERS após a remoção
+        print("Registros na tabela USERS após remoção:")
+        query_table(connection, "USERS")
+
+        # Fechando a conexão com o banco de dados
+        connection.close()
