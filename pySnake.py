@@ -1,5 +1,6 @@
 import pygame
 import random
+from functools import reduce
 
 # Definição de cores
 BLACK = (0, 0, 0)
@@ -36,12 +37,14 @@ def create_snake():
         'score': 0
     }
 
-# Função para mover a cobra
-def move_snake(snake):
-    new_head = (snake['positions'][0][0] + snake['direction'][0] * CELL_SIZE,
-                snake['positions'][0][1] + snake['direction'][1] * CELL_SIZE)
-    snake['positions'] = [new_head] + snake['positions'][:-1]
-    return snake
+# Função para mover a cobra usando uma função lambda de alta ordem
+move_snake_lambda = lambda snake: {
+    'positions': [(snake['positions'][0][0] + snake['direction'][0] * CELL_SIZE,
+                   snake['positions'][0][1] + snake['direction'][1] * CELL_SIZE)] + snake['positions'][:-1],
+    'direction': snake['direction'],
+    'length': snake['length'],
+    'score': snake['score']
+}
 
 # Função para mudar a direção da cobra
 def change_direction(snake, direction):
@@ -53,26 +56,25 @@ def change_direction(snake, direction):
 def grow_snake(snake):
     snake['length'] += 1
     snake['score'] += 1
+    snake['positions'].append(snake['positions'][-1])
     return snake
 
-# Função para verificar colisões da cobra
-def check_collision(snake):
-    head_x, head_y = snake['positions'][0]
-    return (
-        head_x < 0 or head_x >= WIDTH or
-        head_y < 0 or head_y >= HEIGHT or
-        any(block == snake['positions'][0] for block in snake['positions'][1:])
-    )
+# Função para verificar colisões da cobra usando filter
+check_collision = lambda snake: reduce(
+    lambda acc, pos: acc or pos == snake['positions'][0],
+    filter(lambda pos: pos == snake['positions'][0], snake['positions'][1:]),
+    (snake['positions'][0][0] < 0 or snake['positions'][0][0] >= WIDTH or
+     snake['positions'][0][1] < 0 or snake['positions'][0][1] >= HEIGHT)
+)
 
-# Função para criar uma nova comida
-def generate_food(snake):
-    while True:
-        food_pos = (
-            random.randint(0, (WIDTH - CELL_SIZE) // CELL_SIZE) * CELL_SIZE,
-            random.randint(0, (HEIGHT - CELL_SIZE) // CELL_SIZE) * CELL_SIZE
-        )
-        if food_pos not in snake['positions']:
-            return food_pos
+# Função para criar uma nova comida usando map
+generate_food = lambda snake: next(
+    pos for pos in map(
+        lambda _: (random.randint(0, (WIDTH - CELL_SIZE) // CELL_SIZE) * CELL_SIZE,
+                   random.randint(0, (HEIGHT - CELL_SIZE) // CELL_SIZE) * CELL_SIZE),
+        iter(int, 1)
+    ) if pos not in snake['positions']
+)
 
 # Função para desenhar a tela
 def draw_screen(screen, snake, food, time_remaining):
@@ -119,7 +121,7 @@ def run_game():
                     game_state.snake = change_direction(game_state.snake, RIGHT)
 
         # Move a cobra
-        game_state.snake = move_snake(game_state.snake)
+        game_state.snake = move_snake_lambda(game_state.snake)
 
         # Verifica colisões
         if check_collision(game_state.snake) or time_remaining(game_state.start_time) <= 0:
@@ -155,10 +157,7 @@ def initialize_game():
     return GameState(snake, food, True, start_time)
 
 # Função para calcular o tempo decorrido em segundos
-def time_remaining(start_time):
-    current_time = pygame.time.get_ticks()
-    elapsed_time = (current_time - start_time) // 1000
-    return max(0, STARTING_TIME - elapsed_time)
+time_remaining = lambda start_time: max(0, STARTING_TIME - ((pygame.time.get_ticks() - start_time) // 1000))
 
 # Executa o jogo
 if __name__ == "__main__":
