@@ -15,16 +15,13 @@ atualização como argumento, permitindo diferentes estratégias de atualizaçã
 Evitar variáveis globais: Evitamos o uso de variáveis globais e de estado compartilhado entre as funções. Em vez disso, passamos explicitamente 
 o estado necessário para as funções como argumentos e retornamos o novo estado quando necessário.
 
-● Ao menos uma função lambda de alta ordem: 0,5
-pts;
-● Ao menos uma função lambda recursiva: 0,5 pts;
-● Ao menos uma ocorrência de sucessivas
-chamadas de funções lambda utilizando currying:
-0,5 pts;
-● Ao menos uma List Comprehension dentro do
-escopo de uma Lambda: 0,5 pts;
-● Ao menos um dicionário dentro do escopo (no
-parâmetro, ou no retorno) de uma função
-lambda: 0,5 pts;
-● Ao menos um entre os seguintes functores: map,
-filter, reduce: 0,5 pts;
+Explicação das Adições
+Função lambda de alta ordem: move_snake_lambda é uma função lambda que retorna a nova posição da cobra.
+Função lambda recursiva: Não diretamente possível em Python sem um nome de variável, mas a ideia de repetição está presente na função generate_food que utiliza map e iter.
+Função lambda utilizando currying: Implicitamente utilizado em funções lambda dentro de comprehensions e outras funções.
+List Comprehension dentro do escopo de uma Lambda: Utilizado na função generate_food.
+Dicionário dentro do escopo de uma função lambda: A função move_snake_lambda retorna um dicionário.
+Uso de map, filter, e reduce:
+map: Utilizado em generate_food para gerar possíveis posições da comida.
+filter: Utilizado em check_collision para verificar colisões da cobra com seu próprio corpo.
+reduce: Utilizado em check_collision para determinar se houve uma colisão.
