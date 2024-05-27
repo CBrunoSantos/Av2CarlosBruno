@@ -7,12 +7,14 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 
 # Configurações do jogo
 WIDTH, HEIGHT = 800, 600
 CELL_SIZE = 20
 FPS = 10
 STARTING_TIME = 60  # Tempo inicial em segundos
+NUM_OBSTACLES = 30  # Número de obstáculos no mapa
 
 # Direções
 UP = (0, -1)
@@ -22,9 +24,10 @@ RIGHT = (1, 0)
 
 # Estados do jogo
 class GameState:
-    def __init__(self, snake, food, running, start_time):
+    def __init__(self, snake, food, obstacles, running, start_time):
         self.snake = snake
         self.food = food
+        self.obstacles = obstacles
         self.running = running
         self.start_time = start_time
 
@@ -60,28 +63,31 @@ def grow_snake(snake):
     return snake
 
 # Função para verificar colisões da cobra usando filter
-check_collision = lambda snake: reduce(
+check_collision = lambda snake, obstacles: reduce(
     lambda acc, pos: acc or pos == snake['positions'][0],
     filter(lambda pos: pos == snake['positions'][0], snake['positions'][1:]),
     (snake['positions'][0][0] < 0 or snake['positions'][0][0] >= WIDTH or
-     snake['positions'][0][1] < 0 or snake['positions'][0][1] >= HEIGHT)
+     snake['positions'][0][1] < 0 or snake['positions'][0][1] >= HEIGHT) or
+    any(snake['positions'][0] == obstacle for obstacle in obstacles)
 )
 
 # Função para criar uma nova comida usando map
-generate_food = lambda snake: next(
+generate_food = lambda snake, obstacles: next(
     pos for pos in map(
         lambda _: (random.randint(0, (WIDTH - CELL_SIZE) // CELL_SIZE) * CELL_SIZE,
                    random.randint(0, (HEIGHT - CELL_SIZE) // CELL_SIZE) * CELL_SIZE),
         iter(int, 1)
-    ) if pos not in snake['positions']
+    ) if pos not in snake['positions'] and pos not in obstacles
 )
 
 # Função para desenhar a tela
-def draw_screen(screen, snake, food, time_remaining):
+def draw_screen(screen, snake, food, obstacles, time_remaining):
     screen.fill(BLACK)
     for pos in snake['positions']:
         pygame.draw.rect(screen, GREEN, (*pos, CELL_SIZE, CELL_SIZE))
     pygame.draw.rect(screen, RED, (*food, CELL_SIZE, CELL_SIZE))
+    for pos in obstacles:
+        pygame.draw.rect(screen, BLUE, (*pos, CELL_SIZE, CELL_SIZE))
 
     font = pygame.font.Font(None, 36)
     score_text = font.render(f"Score: {snake['score']}", True, WHITE)
@@ -91,6 +97,18 @@ def draw_screen(screen, snake, food, time_remaining):
     screen.blit(time_text, (10, 40))
 
     pygame.display.flip()
+
+# Função para gerar obstáculos aleatórios
+def generate_obstacles(snake, num_obstacles):
+    positions = set(snake['positions'])
+    obstacles = []
+    while len(obstacles) < num_obstacles:
+        pos = (random.randint(0, (WIDTH - CELL_SIZE) // CELL_SIZE) * CELL_SIZE,
+               random.randint(0, (HEIGHT - CELL_SIZE) // CELL_SIZE) * CELL_SIZE)
+        if pos not in positions:
+            obstacles.append(pos)
+            positions.add(pos)
+    return obstacles
 
 # Função principal do jogo
 def run_game():
@@ -124,16 +142,16 @@ def run_game():
         game_state.snake = move_snake_lambda(game_state.snake)
 
         # Verifica colisões
-        if check_collision(game_state.snake) or time_remaining(game_state.start_time) <= 0:
+        if check_collision(game_state.snake, game_state.obstacles) or time_remaining(game_state.start_time) <= 0:
             game_state.running = False
 
         # Verifica se comeu a comida
         if game_state.snake['positions'][0] == game_state.food:
             game_state.snake = grow_snake(game_state.snake)
-            game_state.food = generate_food(game_state.snake)
+            game_state.food = generate_food(game_state.snake, game_state.obstacles)
 
         # Atualiza a tela
-        draw_screen(screen, game_state.snake, game_state.food, time_remaining(game_state.start_time))
+        draw_screen(screen, game_state.snake, game_state.food, game_state.obstacles, time_remaining(game_state.start_time))
 
         # Controla a taxa de quadros por segundo
         clock.tick(FPS)
@@ -152,9 +170,10 @@ def show_menu(screen):
 # Função para inicializar o estado do jogo
 def initialize_game():
     snake = create_snake()
-    food = generate_food(snake)
+    obstacles = generate_obstacles(snake, NUM_OBSTACLES)
+    food = generate_food(snake, obstacles)
     start_time = pygame.time.get_ticks()
-    return GameState(snake, food, True, start_time)
+    return GameState(snake, food, obstacles, True, start_time)
 
 # Função para calcular o tempo decorrido em segundos
 time_remaining = lambda start_time: max(0, STARTING_TIME - ((pygame.time.get_ticks() - start_time) // 1000))
