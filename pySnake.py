@@ -22,6 +22,31 @@ DOWN = (0, 1)
 LEFT = (-1, 0)
 RIGHT = (1, 0)
 
+# Monad Maybe
+class Maybe:
+    def __init__(self, value):
+        self.value = value
+
+    def bind(self, func):
+        if isinstance(self, Nothing):
+            return self
+        try:
+            result = func(self.value)
+            return Just(result) if result is not None else Nothing()
+        except:
+            return Nothing()
+
+    def __str__(self):
+        return f'Just({self.value})' if isinstance(self, Just) else 'Nothing'
+
+class Just(Maybe):
+    def __init__(self, value):
+        super().__init__(value)
+
+class Nothing(Maybe):
+    def __init__(self):
+        super().__init__(None)
+
 # Estados do jogo
 class GameState:
     def __init__(self, snake, food, obstacles, running, start_time):
@@ -72,13 +97,13 @@ check_collision = lambda snake, obstacles: reduce(
 )
 
 # Função para criar uma nova comida usando map
-generate_food = lambda snake, obstacles: next(
-    pos for pos in map(
+generate_food = lambda snake, obstacles: Maybe(next(
+    (pos for pos in map(
         lambda _: (random.randint(0, (WIDTH - CELL_SIZE) // CELL_SIZE) * CELL_SIZE,
                    random.randint(0, (HEIGHT - CELL_SIZE) // CELL_SIZE) * CELL_SIZE),
         iter(int, 1)
-    ) if pos not in snake['positions'] and pos not in obstacles
-)
+    ) if pos not in snake['positions'] and pos not in obstacles), None
+))
 
 # Função para desenhar a tela
 def draw_screen(screen, snake, food, obstacles, time_remaining):
@@ -148,7 +173,7 @@ def run_game():
         # Verifica se comeu a comida
         if game_state.snake['positions'][0] == game_state.food:
             game_state.snake = grow_snake(game_state.snake)
-            game_state.food = generate_food(game_state.snake, game_state.obstacles)
+            game_state.food = generate_food(game_state.snake, game_state.obstacles).value
 
         # Atualiza a tela
         draw_screen(screen, game_state.snake, game_state.food, game_state.obstacles, time_remaining(game_state.start_time))
@@ -171,7 +196,7 @@ def show_menu(screen):
 def initialize_game():
     snake = create_snake()
     obstacles = generate_obstacles(snake, NUM_OBSTACLES)
-    food = generate_food(snake, obstacles)
+    food = generate_food(snake, obstacles).value
     start_time = pygame.time.get_ticks()
     return GameState(snake, food, obstacles, True, start_time)
 

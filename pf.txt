@@ -1,23 +1,7 @@
-Neste código, aplicamos alguns princípios da programação funcional:
 
-Funções puras: A maioria das funções neste código são puras, o que significa que produzem o mesmo resultado para os mesmos argumentos e não têm 
-efeitos colaterais. Por exemplo, move_snake(), change_direction(), grow_snake(), check_collision(), generate_food(), time_remaining(), etc., 
-são todas funções puras.
-
-Imutabilidade: Em Python, muitas estruturas de dados (como listas e dicionários) são mutáveis, mas procuramos evitar a mutação direta dos dados 
-sempre que possível. Em vez disso, preferimos criar novos objetos com as modificações necessárias. Por exemplo, ao mover a cobra, criamos uma 
-nova lista de posições da cobra em vez de modificar a lista original.
-
-Funções de ordem superior: Embora não estejam presentes neste código, as funções de ordem superior poderiam ser utilizadas para manipular o 
-estado do jogo de forma mais flexível. Por exemplo, poderíamos ter uma função de loop principal mais genérica que recebe uma função de 
-atualização como argumento, permitindo diferentes estratégias de atualização do estado do jogo.
-
-Evitar variáveis globais: Evitamos o uso de variáveis globais e de estado compartilhado entre as funções. Em vez disso, passamos explicitamente 
-o estado necessário para as funções como argumentos e retornamos o novo estado quando necessário.
-
-Explicação das Adições
 Função lambda de alta ordem: move_snake_lambda é uma função lambda que retorna a nova posição da cobra.
-Função lambda recursiva: Não diretamente possível em Python sem um nome de variável, mas a ideia de repetição está presente na função generate_food que utiliza map e iter.
+Função lambda recursiva: Não diretamente possível em Python sem um nome de variável, mas a ideia de repetição 
+está presente na função generate_food que utiliza map e iter.
 Função lambda utilizando currying: Implicitamente utilizado em funções lambda dentro de comprehensions e outras funções.
 List Comprehension dentro do escopo de uma Lambda: Utilizado na função generate_food.
 Dicionário dentro do escopo de uma função lambda: A função move_snake_lambda retorna um dicionário.
