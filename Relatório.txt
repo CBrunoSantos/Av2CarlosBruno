@@ -1,3 +1,5 @@
+acrescentar os pontos das funções diretamente no texto das funcionalidades
+
 Relatório do Projeto: Jogo da Cobra em Python
 Introdução
 Este projeto consiste na implementação de um jogo da cobra (Snake) utilizando a linguagem Python e a biblioteca Pygame. 
